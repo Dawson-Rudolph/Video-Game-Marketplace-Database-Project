@@ -13,4 +13,6 @@ from neo4j import GraphDatabase
 
 
 
-# Neo4j queiries
+# Neo4j queries
+
+
