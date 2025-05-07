@@ -9,11 +9,11 @@ from neo4j import GraphDatabase
 # Replace with the actual connection details
 MONGO_URI = "mongodb://localhost:1234"
 POSTGRES_PARAMS = {
-    "host": "localhost",
-    "port": 1234,
-    "dbname": "your_postgres_db",
-    "user": "your_username",
-    "password": "your_password"
+    "host": "cs440.campus-quest.com",
+    "port": 28101,
+    "dbname": "postgres",
+    "user": "postgres",
+    "password": "Academic2025T1!"
 }
 NEO4J_URI = "bolt://localhost:1234"
 NEO4J_AUTH = ("neo4j", "your_password")
@@ -60,6 +60,34 @@ def postgreSQLQueries():
         cursor = connection.cursor()
 
         # Add queries here
+        cursor.execute("""
+            SELECT g.title, COUNT(d.id) AS download_count
+            FROM download_history d
+            JOIN games g ON d.game_id = g.id
+            GROUP BY g.title
+            ORDER BY download_count DESC
+            LIMIT 1;
+        """)
+
+        result = cursor.fetchone()
+        if result:
+            print(f"Most Downloaded Game: {result[0]}, Downloads: {result[1]}")
+        else:
+            print("No downloads found.")
+
+        cursor.execute("""
+        SELECT payment_method, COUNT(*) AS method_count
+        FROM purchases
+        GROUP BY payment_method
+        ORDER BY method_count DESC
+        LIMIT 1;
+        """)
+
+        result = cursor.fetchone()
+        if result:
+            print(f"Most Common Payment Method: {result[0]} (used {result[1]} times)")
+        else:
+            print("No payment records found.")
 
     except Exception as e:
         print(f"PostgreSQL error: {e}")
