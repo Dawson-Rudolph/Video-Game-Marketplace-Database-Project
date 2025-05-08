@@ -7,7 +7,7 @@ from neo4j import GraphDatabase
 
 
 # Replace with the actual connection details
-MONGO_URI = "mongodb://localhost:1234"
+MONGO_URI = "mongodb://admin:Academic2025T1!@cs440.campus-quest.com:28100/?tls=true&tlsInsecure=true"
 POSTGRES_PARAMS = {
     "host": "cs440.campus-quest.com",
     "port": 28101,
@@ -23,10 +23,63 @@ def mongoQueries():
     client = None
     try:
         client = MongoClient(MONGO_URI)
-        db = client['your_database_name']
-        collection = db['collection_name']
+        db = client['video-games']
+        print(db)
+        collection = db['video games']
+        print(collection)
 
-        # Add queries here
+        # Query 1: Find games with at least one review rated 3
+        pipeline = [
+            {"$match": {"reviews.rating": 3}},
+            {"$project": {
+                "game_id": 1,
+                "matching_reviews": {
+                    "$filter": {
+                        "input": "$reviews",
+                        "as": "review",
+                        "cond": {"$eq": ["$$review.rating", 3]}
+                    }
+                }
+            }}
+        ]
+
+        cursor = collection.aggregate(pipeline)
+        print("\nGames with reviews rated 3:")
+        for game in cursor:
+            print(f"Game: {game['game_id']}")
+            for review in game['matching_reviews']:
+                print(f"  Review by {review['user_id']}: {review['comment']}")
+                print(f"  Date: {review['date']}")
+            print()
+
+        # Query 2: Find games with reviews that use the word "fun"
+        pipeline = [
+            {"$match": {"reviews.comment": {"$regex": "fun", "$options": "i"}}},
+            {"$project": {
+                "game_id": 1,
+                "matching_reviews": {
+                    "$filter": {
+                        "input": "$reviews",
+                        "as": "review",
+                        "cond": {"$regexMatch": {
+                            "input": "$$review.comment",
+                            "regex": "fun",
+                            "options": "i"
+                        }}
+                    }
+                }
+            }}
+        ]
+
+        cursor = collection.aggregate(pipeline)
+        print("\nGames with reviews containing the word 'fun':")
+        for game in cursor:
+            print(f"Game: {game['game_id']}")
+            for review in game['matching_reviews']:
+                print(f"  Review by {review['user_id']}: {review['comment']}")
+                print(f"  Date: {review['date']}")
+            print()
+
 
     except Exception as e:
         print(f"MongoDB error: {e}")
