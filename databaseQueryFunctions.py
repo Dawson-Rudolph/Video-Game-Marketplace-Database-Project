@@ -45,6 +45,32 @@ def neo4jQueries():
 
             # Add queries here
 
+            # Query 1: Games Released on PC
+            result = session.run("""
+                MATCH (g:Game)-[:RELEASED_ON]->(p:Platform {name: "PC"})
+                RETURN g.name AS game, g.released AS release_date
+                ORDER BY release_date DESC
+            """)
+            print("\nGames Released on PC:")
+            for record in result:
+                print(f"{record['game']} (Released: {record['release_date']})")
+
+
+            # Query 2: Recommend Similar Games by Shared Genre and Higher Rating
+            result = session.run("""
+                MATCH (target:Game {name: "Tomb Raider (2013)"})
+                MATCH (target)-[:BELONGS_TO]->(g:Genre)<-[:BELONGS_TO]-(other:Game)
+                WHERE other <> target AND other.rating > target.rating
+                WITH other, count(g) AS shared_genres, other.rating AS rating
+                ORDER BY shared_genres DESC, rating DESC
+                LIMIT 5
+                RETURN other.name AS recommended_game, shared_genres, rating
+                """)
+            print("\nRecommended Games Similar to 'Tomb Raider (2013)' (based on shared genres and higher " \
+            "rating):")
+            for record in result:
+                print(f"{record['recommended_game']} (Shared Genres: {record['shared_genres']}, Rating: {record['rating']})")
+
     except Exception as e:
         print(f"Neo4j error: {e}")
     finally:
